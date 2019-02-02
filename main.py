@@ -14,7 +14,17 @@ from gi.repository import Gtk
 class MainWindow(object):
     def __init__(self):
         self.window = Gtk.Window(title="RasPiTape")
-        self.button_container = Gtk.Box()
+
+        self.grid = Gtk.Grid()
+        self.grid.set_column_homogeneous(True)
+        self.grid.set_row_homogeneous(True)
+        self.window.add(self.grid)
+
+        self.file_list_store = Gtk.ListStore(str, float)
+        self.file_list_store.append(["test.wav", 2.15])
+        self.file_list_view = Gtk.TreeView.new_with_model(self.file_list_store)
+        self.file_list_view.append_column(Gtk.TreeViewColumn("File Name", Gtk.CellRendererText(), text=0))
+        self.file_list_view.append_column(Gtk.TreeViewColumn("Length", Gtk.CellRendererText(), text=1))
 
         self.record_button = RecordButton()
         self.play_button = PlayButton()
@@ -27,22 +37,18 @@ class MainWindow(object):
         self.setup_events()
 
     def arrange_ui_elements(self):
-        self.create_button_container()
-        for button in [
-            self.record_button,
-            self.play_button,
-            self.prev_button,
-            self.next_button,
-            self.stop_button,
-            self.pause_button
-        ]:
-            self.add_button_to_row(button)
+        self.scrollable_treelist = Gtk.ScrolledWindow()
+        self.scrollable_treelist.set_vexpand(True)
 
-    def create_button_container(self):
-        self.window.add(self.button_container)
+        self.grid.attach(self.scrollable_treelist, 0, 0, 8, 10)
+        self.grid.attach_next_to(self.record_button.widget, self.scrollable_treelist, Gtk.PositionType.BOTTOM, 1, 1)
+        self.grid.attach_next_to(self.play_button.widget, self.record_button.widget, Gtk.PositionType.RIGHT, 1, 1)
+        self.grid.attach_next_to(self.prev_button.widget, self.play_button.widget, Gtk.PositionType.RIGHT, 1, 1)
+        self.grid.attach_next_to(self.next_button.widget, self.prev_button.widget, Gtk.PositionType.RIGHT, 1, 1)
+        self.grid.attach_next_to(self.stop_button.widget, self.next_button.widget, Gtk.PositionType.RIGHT, 1, 1)
+        self.grid.attach_next_to(self.pause_button.widget, self.stop_button.widget, Gtk.PositionType.RIGHT, 1, 1)
 
-    def add_button_to_row(self, button):
-        self.button_container.pack_start(button.widget, False, False, 0)
+        self.scrollable_treelist.add(self.file_list_view)
 
     def setup_events(self):
         self.window.connect("destroy", Gtk.main_quit)
